@@ -87,6 +87,7 @@ func resourceAppServiceEnvironment() *schema.Resource {
 				ValidateFunc: validation.IntBetween(5, 15),
 			},
 
+			// TODO - Not allowed in V3
 			"pricing_tier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -98,6 +99,7 @@ func resourceAppServiceEnvironment() *schema.Resource {
 				}, false),
 			},
 
+			// TODO - Not allowed in V3
 			"allowed_user_ip_cidrs": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -109,6 +111,7 @@ func resourceAppServiceEnvironment() *schema.Resource {
 				},
 			},
 
+			// TODO - Not allowed in V3
 			"user_whitelisted_ip_ranges": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -119,6 +122,17 @@ func resourceAppServiceEnvironment() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: helpersValidate.CIDR,
 				},
+			},
+
+			"version": {
+				Type: schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default: "ASEV2",
+				ValidateFunc: validation.StringInSlice([]string{
+						"ASEV2",
+						"ASEV3",
+					}, false),
 			},
 
 			// TODO in 3.0 Make it "Required"
@@ -192,27 +206,30 @@ func resourceAppServiceEnvironmentCreate(d *schema.ResourceData, meta interface{
 
 	frontEndScaleFactor := d.Get("front_end_scale_factor").(int)
 	pricingTier := d.Get("pricing_tier").(string)
+	kind := d.Get("version").(string)
 
 	envelope := web.AppServiceEnvironmentResource{
 		Location: utils.String(location),
-		Kind:     utils.String("ASEV2"),
+		Kind:     utils.String(kind),
 		AppServiceEnvironment: &web.AppServiceEnvironment{
 			Name:                      utils.String(name),
 			Location:                  utils.String(location),
 			InternalLoadBalancingMode: web.LoadBalancingMode(internalLoadBalancingMode),
 			FrontEndScaleFactor:       utils.Int32(int32(frontEndScaleFactor)),
-			MultiSize:                 utils.String(convertFromIsolatedSKU(pricingTier)),
 			VirtualNetwork: &web.VirtualNetworkProfile{
 				ID:     utils.String(subnetId),
 				Subnet: utils.String(subnet.Name),
 			},
-			UserWhitelistedIPRanges: utils.ExpandStringSlice(userWhitelistedIPRangesRaw),
-
 			// the SDK is coded primarily for v1, which needs a non-null entry for workerpool, so we construct an empty slice for it
 			// TODO: remove this hack once https://github.com/Azure/azure-rest-api-specs/pull/8433 has been merged
 			WorkerPools: &[]web.WorkerPool{{}},
 		},
 		Tags: tags.Expand(t),
+	}
+
+	if kind == "ASEV2" {
+		envelope.AppServiceEnvironment.MultiSize = utils.String(convertFromIsolatedSKU(pricingTier))
+		envelope.AppServiceEnvironment.UserWhitelistedIPRanges = utils.ExpandStringSlice(userWhitelistedIPRangesRaw)
 	}
 
 	// whilst this returns a future go-autorest has a max number of retries
@@ -335,6 +352,12 @@ func resourceAppServiceEnvironmentRead(d *schema.ResourceData, meta interface{})
 		d.Set("location", azure.NormalizeLocation(*location))
 	}
 
+	kind := ""
+	if existing.Kind != nil {
+		kind = *existing.Kind
+	}
+	d.Set("version", kind)
+
 	if props := existing.AppServiceEnvironment; props != nil {
 		d.Set("internal_load_balancing_mode", string(props.InternalLoadBalancingMode))
 
@@ -423,6 +446,8 @@ func convertFromIsolatedSKU(isolated string) (vmSKU string) {
 		vmSKU = "Standard_D2_V2"
 	case "I3":
 		vmSKU = "Standard_D3_V2"
+	default:
+		vmSKU = isolated
 	}
 	return vmSKU
 }
@@ -435,6 +460,8 @@ func convertToIsolatedSKU(vmSKU string) (isolated string) {
 		isolated = "I2"
 	case "Standard_D3_V2":
 		isolated = "I3"
+	default:
+		isolated = vmSKU
 	}
 	return isolated
 }
