@@ -23,13 +23,18 @@ func TestAccDataSourceAppServiceEnvironment_basic(t *testing.T) {
 				check.That(data.ResourceName).Key("internal_ip_address").Exists(),
 				check.That(data.ResourceName).Key("service_ip_address").Exists(),
 				check.That(data.ResourceName).Key("outbound_ip_addresses").Exists(),
+				check.That(data.ResourceName).Key("cluster_setting.#").HasValue("2"),
+				check.That(data.ResourceName).Key("cluster_setting.1.name").HasValue("InternalEncryption"),
+				check.That(data.ResourceName).Key("cluster_setting.1.value").HasValue("true"),
+				check.That(data.ResourceName).Key("cluster_setting.2.name").HasValue("DisableTls1.0"),
+				check.That(data.ResourceName).Key("cluster_setting.2.value").HasValue("1"),
 			),
 		},
 	})
 }
 
 func (d AppServiceEnvironmentDataSource) basic(data acceptance.TestData) string {
-	config := AppServiceEnvironmentResource{}.basic(data)
+	config := AppServiceEnvironmentResource{}.clusterSettings(data)
 	return fmt.Sprintf(`
 %s
 

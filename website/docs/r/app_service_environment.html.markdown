@@ -64,7 +64,7 @@ resource "azurerm_app_service_environment" "example" {
 
 ~> **NOTE** a /24 or larger CIDR is required. Once associated with an ASE this size cannot be changed.
 
-* `cluster_setting` - (Optional) One or more `cluster_setting` blocks as defined below. 
+* `cluster_setting` - (Optional) Zero or more `cluster_setting` blocks as defined below. 
 
 * `internal_load_balancing_mode` - (Optional) Specifies which endpoints to serve internally in the Virtual Network for the App Service Environment. Possible values are `None`, `Web`, `Publishing` and combined value `"Web, Publishing"`. Defaults to `None`.
 
