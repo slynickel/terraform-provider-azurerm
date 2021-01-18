@@ -195,7 +195,7 @@ func resourceAppServiceEnvironmentCreate(d *schema.ResourceData, meta interface{
 
 	vnet, err := networksClient.Get(ctx, subnet.ResourceGroup, subnet.VirtualNetworkName, "")
 	if err != nil {
-		return fmt.Errorf("Error retrieving Virtual Network %q (Resource Group %q): %+v", subnet.VirtualNetworkName, subnet.ResourceGroup, err)
+		return fmt.Errorf("retrieving Virtual Network %q (Resource Group %q): %+v", subnet.VirtualNetworkName, subnet.ResourceGroup, err)
 	}
 
 	// the App Service Environment has to be in the same location as the Virtual Network
@@ -203,13 +203,13 @@ func resourceAppServiceEnvironmentCreate(d *schema.ResourceData, meta interface{
 	if loc := vnet.Location; loc != nil {
 		location = azure.NormalizeLocation(*loc)
 	} else {
-		return fmt.Errorf("Error determining Location from Virtual Network %q (Resource Group %q): `location` was nil", subnet.VirtualNetworkName, subnet.ResourceGroup)
+		return fmt.Errorf("determining Location from Virtual Network %q (Resource Group %q): `location` was nil", subnet.VirtualNetworkName, subnet.ResourceGroup)
 	}
 
 	existing, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if !utils.ResponseWasNotFound(existing.Response) {
-			return fmt.Errorf("Error checking for presence of existing App Service Environment %q (Resource Group %q): %s", name, resourceGroup, err)
+			return fmt.Errorf("checking for presence of existing App Service Environment %q (Resource Group %q): %s", name, resourceGroup, err)
 		}
 	}
 
@@ -250,7 +250,7 @@ func resourceAppServiceEnvironmentCreate(d *schema.ResourceData, meta interface{
 
 	// whilst this returns a future go-autorest has a max number of retries
 	if _, err := client.CreateOrUpdate(ctx, resourceGroup, name, envelope); err != nil {
-		return fmt.Errorf("Error creating App Service Environment %q (Resource Group %q): %+v", name, resourceGroup, err)
+		return fmt.Errorf("creating App Service Environment %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	createWait := resource.StateChangeConf{
@@ -272,7 +272,7 @@ func resourceAppServiceEnvironmentCreate(d *schema.ResourceData, meta interface{
 
 	read, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
-		return fmt.Errorf("Error retrieving App Service Environment %q (Resource Group %q): %+v", name, resourceGroup, err)
+		return fmt.Errorf("retrieving App Service Environment %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
 	d.SetId(*read.ID)
@@ -319,7 +319,7 @@ func resourceAppServiceEnvironmentUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if _, err := client.Update(ctx, id.ResourceGroup, id.HostingEnvironmentName, e); err != nil {
-		return fmt.Errorf("Error updating App Service Environment %q (Resource Group %q): %+v", id.HostingEnvironmentName, id.ResourceGroup, err)
+		return fmt.Errorf("updating App Service Environment %q (Resource Group %q): %+v", id.HostingEnvironmentName, id.ResourceGroup, err)
 	}
 
 	updateWait := resource.StateChangeConf{
@@ -335,7 +335,7 @@ func resourceAppServiceEnvironmentUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if _, err := updateWait.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for Update of App Service Environment %q (Resource Group %q): %+v", id.HostingEnvironmentName, id.ResourceGroup, err)
+		return fmt.Errorf("waiting for Update of App Service Environment %q (Resource Group %q): %+v", id.HostingEnvironmentName, id.ResourceGroup, err)
 	}
 
 	return resourceAppServiceEnvironmentRead(d, meta)
@@ -358,7 +358,7 @@ func resourceAppServiceEnvironmentRead(d *schema.ResourceData, meta interface{})
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error retrieving App Service Environmment %q (Resource Group %q): %+v", id.HostingEnvironmentName, id.ResourceGroup, err)
+		return fmt.Errorf("retrieving App Service Environmment %q (Resource Group %q): %+v", id.HostingEnvironmentName, id.ResourceGroup, err)
 	}
 
 	d.Set("name", id.HostingEnvironmentName)
@@ -421,7 +421,7 @@ func resourceAppServiceEnvironmentDelete(d *schema.ResourceData, meta interface{
 			return nil
 		}
 
-		return fmt.Errorf("Error deleting App Service Environment %q (Resource Group %q): %+v", id.HostingEnvironmentName, id.ResourceGroup, err)
+		return fmt.Errorf("deleting App Service Environment %q (Resource Group %q): %+v", id.HostingEnvironmentName, id.ResourceGroup, err)
 	}
 
 	err = future.WaitForCompletionRef(ctx, client.Client)
@@ -430,7 +430,7 @@ func resourceAppServiceEnvironmentDelete(d *schema.ResourceData, meta interface{
 			return nil
 		}
 
-		return fmt.Errorf("Error waiting for deletion of App Service Environment %q (Resource Group %q): %+v", id.HostingEnvironmentName, id.ResourceGroup, err)
+		return fmt.Errorf("waiting for deletion of App Service Environment %q (Resource Group %q): %+v", id.HostingEnvironmentName, id.ResourceGroup, err)
 	}
 
 	return nil
