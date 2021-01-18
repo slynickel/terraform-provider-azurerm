@@ -91,20 +91,25 @@ func resourceAppServiceEnvironment() *schema.Resource {
 			"pricing_tier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "I1",
 				ValidateFunc: validation.StringInSlice([]string{
 					"I1",
 					"I2",
 					"I3",
 				}, false),
+				ConflictsWith: []string{
+					"version",
+				},
 			},
 
 			// TODO - Not allowed in V3
 			"allowed_user_ip_cidrs": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true, // remove in 3.0
-				ConflictsWith: []string{"user_whitelisted_ip_ranges"},
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true, // remove in 3.0
+				ConflictsWith: []string{
+					"user_whitelisted_ip_ranges",
+					"version",
+				},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: helpersValidate.CIDR,
@@ -113,11 +118,14 @@ func resourceAppServiceEnvironment() *schema.Resource {
 
 			// TODO - Not allowed in V3
 			"user_whitelisted_ip_ranges": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true, // remove in 3.0
-				ConflictsWith: []string{"allowed_user_ip_cidrs"},
-				Deprecated:    "this property has been renamed to `allowed_user_ip_cidrs` better reflect the expected ip range format",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true, // remove in 3.0
+				ConflictsWith: []string{
+					"allowed_user_ip_cidrs",
+					"version",
+				},
+				Deprecated: "this property has been renamed to `allowed_user_ip_cidrs` better reflect the expected ip range format",
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: helpersValidate.CIDR,
@@ -125,14 +133,19 @@ func resourceAppServiceEnvironment() *schema.Resource {
 			},
 
 			"version": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default: "ASEV2",
+				Default:  "ASEV2",
 				ValidateFunc: validation.StringInSlice([]string{
-						"ASEV2",
-						"ASEV3",
-					}, false),
+					"ASEV2",
+					"ASEV3",
+				}, false),
+				ConflictsWith: []string{
+					"pricing_tier",
+					"allowed_user_ip_cidrs",
+					"user_whitelisted_ip_ranges",
+				},
 			},
 
 			// TODO in 3.0 Make it "Required"
@@ -207,6 +220,9 @@ func resourceAppServiceEnvironmentCreate(d *schema.ResourceData, meta interface{
 	frontEndScaleFactor := d.Get("front_end_scale_factor").(int)
 	pricingTier := d.Get("pricing_tier").(string)
 	kind := d.Get("version").(string)
+	if kind == "ASEV2" && pricingTier == "" {
+		pricingTier = "I1"
+	}
 
 	envelope := web.AppServiceEnvironmentResource{
 		Location: utils.String(location),
