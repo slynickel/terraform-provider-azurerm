@@ -33,6 +33,23 @@ func TestAccAppServiceEnvironment_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppServiceEnvironment_basicV3(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azurerm_app_service_environment", "test")
+	r := AppServiceEnvironmentResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("pricing_tier").HasValue("I1"),
+				check.That(data.ResourceName).Key("front_end_scale_factor").HasValue("15"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccAppServiceEnvironment_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_app_service_environment", "test")
 	r := AppServiceEnvironmentResource{}
@@ -184,6 +201,19 @@ func (r AppServiceEnvironmentResource) basic(data acceptance.TestData) string {
 resource "azurerm_app_service_environment" "test" {
   name      = "acctest-ase-%d"
   subnet_id = azurerm_subnet.ase.id
+}
+`, template, data.RandomInteger)
+}
+
+func (r AppServiceEnvironmentResource) basicV3(data acceptance.TestData) string {
+	template := r.template(data)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_app_service_environment" "test" {
+  name      = "acctest-ase-%d"
+  subnet_id = azurerm_subnet.ase.id
+  version   = "ASEV3"
 }
 `, template, data.RandomInteger)
 }
