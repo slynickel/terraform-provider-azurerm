@@ -206,7 +206,7 @@ resource "azurerm_app_service_environment" "test" {
 }
 
 func (r AppServiceEnvironmentResource) basicV3(data acceptance.TestData) string {
-	template := r.template(data)
+	template := r.templateV3(data)
 	return fmt.Sprintf(`
 %s
 
@@ -321,6 +321,48 @@ resource "azurerm_subnet" "ase" {
   resource_group_name  = azurerm_resource_group.test.name
   virtual_network_name = azurerm_virtual_network.test.name
   address_prefix       = "10.0.1.0/24"
+}
+
+resource "azurerm_subnet" "gateway" {
+  name                 = "gatewaysubnet"
+  resource_group_name  = azurerm_resource_group.test.name
+  virtual_network_name = azurerm_virtual_network.test.name
+  address_prefix       = "10.0.2.0/24"
+}
+`, data.RandomInteger, data.Locations.Primary, data.RandomInteger)
+}
+
+func (r AppServiceEnvironmentResource) templateV3(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_resource_group" "test" {
+  name     = "acctestRG-%d"
+  location = "%s"
+}
+
+resource "azurerm_virtual_network" "test" {
+  name                = "acctest-vnet-%d"
+  location            = azurerm_resource_group.test.location
+  resource_group_name = azurerm_resource_group.test.name
+  address_space       = ["10.0.0.0/16"]
+}
+
+resource "azurerm_subnet" "ase" {
+  name                 = "asesubnet"
+  resource_group_name  = azurerm_resource_group.test.name
+  virtual_network_name = azurerm_virtual_network.test.name
+  address_prefix       = "10.0.1.0/24"
+
+  delegation {
+    name = "asedelegation"
+
+    service_delegation {
+      name = "Microsoft.Web/hostingEnvironments"
+    }
+  }
 }
 
 resource "azurerm_subnet" "gateway" {
