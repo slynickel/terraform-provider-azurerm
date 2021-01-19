@@ -87,10 +87,11 @@ func resourceAppServiceEnvironment() *schema.Resource {
 				ValidateFunc: validation.IntBetween(5, 15),
 			},
 
-			// TODO - Not allowed in V3
+			// TODO - Not allowed in V3, but a value is returned
 			"pricing_tier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"I1",
 					"I2",

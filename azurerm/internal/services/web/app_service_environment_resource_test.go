@@ -42,7 +42,7 @@ func TestAccAppServiceEnvironment_basicV3(t *testing.T) {
 			Config: r.basicV3(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("pricing_tier").HasValue("I1"),
+				check.That(data.ResourceName).Key("pricing_tier").Exists(),
 				check.That(data.ResourceName).Key("front_end_scale_factor").HasValue("15"),
 			),
 		},
