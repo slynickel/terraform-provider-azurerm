@@ -39,7 +39,7 @@ func TestAccAppServiceEnvironment_basicV3(t *testing.T) {
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.basicV3(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("pricing_tier").HasValue("I1"),
