@@ -360,7 +360,8 @@ resource "azurerm_subnet" "ase" {
     name = "asedelegation"
 
     service_delegation {
-      name = "Microsoft.Web/hostingEnvironments"
+      name    = "Microsoft.Web/hostingEnvironments"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
     }
   }
 }
