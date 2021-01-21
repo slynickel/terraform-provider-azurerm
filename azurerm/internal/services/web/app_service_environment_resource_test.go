@@ -168,6 +168,7 @@ func TestAccAppServiceEnvironment_clusterSettings(t *testing.T) {
 			Config: r.clusterSettings(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("cluster_setting.#").HasValue("2"),
 			),
 		},
 		data.ImportStep(),
@@ -175,6 +176,7 @@ func TestAccAppServiceEnvironment_clusterSettings(t *testing.T) {
 			Config: r.clusterSettingsUpdate(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("cluster_setting.#").HasValue("3"),
 			),
 		},
 		data.ImportStep(),
@@ -182,6 +184,7 @@ func TestAccAppServiceEnvironment_clusterSettings(t *testing.T) {
 			Config: r.clusterSettings(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("cluster_setting.#").HasValue("2"),
 			),
 		},
 		data.ImportStep(),
